@@ -72,7 +72,6 @@ fn upperString(string: []u8) void {
     }
 }
 
-
 fn stripClassName(string: []const u8) String { //Must deinit string
     var stripped = String.init(std.heap.page_allocator);
     stripped.appendSlice(string) catch {};
@@ -83,13 +82,13 @@ fn stripClassName(string: []const u8) String { //Must deinit string
 }
 
 fn escapeFunctionName(string: []const u8) String { //Must deinit string
-    const keywords = [_][]const u8 { "align", "resume" };
+    const keywords = [_][]const u8{ "align", "resume" };
 
     var escaped = String.init(std.heap.page_allocator);
 
     for (keywords) |keyword| {
         if (std.mem.eql(u8, string, keyword)) {
-            std.fmt.format(escaped.writer(), "_{s}", .{ string }) catch {};
+            std.fmt.format(escaped.writer(), "_{s}", .{string}) catch {};
             return escaped;
         }
     }
@@ -99,9 +98,8 @@ fn escapeFunctionName(string: []const u8) String { //Must deinit string
     return escaped;
 }
 
-
 fn convertIntPrimitive(base_type: []const u8) ?[]const u8 {
-    const int_conversions = [_][2][]const u8 {
+    const int_conversions = [_][2][]const u8{
         .{ "int", "i64" }, //NOTE: Godot int is 64bit //WARNING: Except on NativeStructs...
         .{ "int8", "i8" },
         .{ "int16", "i16" },
@@ -131,7 +129,7 @@ fn convertIntPrimitive(base_type: []const u8) ?[]const u8 {
 }
 
 fn convertFloatPrimitive(base_type: []const u8) ?[]const u8 {
-    const float_conversions = [_][2][]const u8 {
+    const float_conversions = [_][2][]const u8{
         .{ "float", "f64" }, //NOTE: Godot float is 64bit //WARNING: Except on NativeStructs...
         .{ "double", "f64" },
         .{ "float32", "f32" },
@@ -147,7 +145,7 @@ fn convertFloatPrimitive(base_type: []const u8) ?[]const u8 {
 }
 
 fn convertPrimitiveBaseTypeToZig(base_type: []const u8) ?[]const u8 {
-    const other_conversions = [_][2][]const u8 {
+    const other_conversions = [_][2][]const u8{
         .{ "void", "void" },
         .{ "bool", "bool" },
     };
@@ -182,7 +180,6 @@ fn isFloat(base_type: []const u8) bool {
 fn isPrimitive(base_type: []const u8) bool {
     return convertPrimitiveBaseTypeToZig(base_type) != null;
 }
-
 
 fn isTypedArray(raw_type: []const u8) bool {
     const index = std.mem.indexOf(u8, raw_type, "typedarray::");
@@ -240,7 +237,7 @@ fn isGlobalBitfield(raw_type: []const u8) bool {
     return index == null;
 }
 
-const core_types = [_][]const u8 { 
+const core_types = [_][]const u8{
     "AABB",
     "Array",
     "Basis",
@@ -257,6 +254,7 @@ const core_types = [_][]const u8 {
     "PackedStringArray",
     "PackedVector2Array",
     "PackedVector3Array",
+    "PackedVector4Array",
     "Plane",
     "Projection",
     "Quaternion",
@@ -326,7 +324,6 @@ fn isNativeStructType(raw_type: []const u8) bool {
     return native_structs_map.contains(raw_type);
 }
 
-
 fn isUnformattedEnum(raw_type: []const u8) bool { // NOTE: Need this for native structs, which contain unformatted enum types...
     const enum_index = std.mem.indexOf(u8, raw_type, "enum::");
     if (enum_index != null) {
@@ -389,10 +386,9 @@ fn typedArrayConverted(raw_type: []const u8) String { //Must deinit string //Ass
     }
 
     var converted = String.init(std.heap.page_allocator);
-    std.fmt.format(converted.writer(), "TypedArray({s})", .{ base_type }) catch {};
+    std.fmt.format(converted.writer(), "TypedArray({s})", .{base_type}) catch {};
     return converted;
 }
-
 
 const TypeKind = enum {
     primitive,
@@ -422,7 +418,7 @@ fn determineRawTypeKind(base_type: []const u8) TypeKind { //NOTE: Type expected 
     } else if (isNativeStructType(base_type)) {
         return TypeKind.native_struct;
     } else {
-        std.debug.print("Unknown type:{s}\n", .{ base_type });
+        std.debug.print("Unknown type:{s}\n", .{base_type});
         @panic("Unhandled type");
     }
 }
@@ -466,7 +462,7 @@ const ParsedType = struct {
 
         const type_kind = determineRawTypeKind(undecorated_json_type);
 
-        const parsed_type = ParsedType {
+        const parsed_type = ParsedType{
             .undecorated_json_type = undecorated_json_type,
             .type_kind = type_kind,
             .pointer = pointer,
@@ -522,9 +518,7 @@ const ParsedType = struct {
         }
         return converted;
     }
-
 };
-
 
 fn stringFunctionSignatureBase(is_method: bool, function_name: []const u8, parsed_return_type_string: []const u8, is_const: bool, is_vararg: bool, arguments: ?*const std.json.Array) String { //Must deinit string
     var signature_args = String.init(std.heap.page_allocator);
@@ -566,13 +560,9 @@ fn stringFunctionSignatureBase(is_method: bool, function_name: []const u8, parse
     var string = String.init(std.heap.page_allocator);
     if (is_method) {
         const constness_string = if (is_const) "const " else "";
-        std.fmt.format(string.writer(),
-            "    pub fn {s}(self: *{s}Self{s}) {s} {{\n",
-            .{ camel_function_name.items, constness_string, signature_args.items, parsed_return_type_string }) catch {};
+        std.fmt.format(string.writer(), "    pub fn {s}(self: *{s}Self{s}) {s} {{\n", .{ camel_function_name.items, constness_string, signature_args.items, parsed_return_type_string }) catch {};
     } else {
-        std.fmt.format(string.writer(),
-            "    pub fn {s}({s}) {s} {{\n",
-            .{ camel_function_name.items, signature_args.items, parsed_return_type_string }) catch {};
+        std.fmt.format(string.writer(), "    pub fn {s}({s}) {s} {{\n", .{ camel_function_name.items, signature_args.items, parsed_return_type_string }) catch {};
     }
 
     return string;
@@ -621,21 +611,21 @@ fn stringArgs(arguments: ?*const std.json.Array) String { //Must deinit string
             const parsed_arg_type = ParsedType.new(argument.get("type").?.string);
 
             if (parsed_arg_type.pointer > 0) {
-                std.fmt.format(string.writer(), "p_{s}", .{ arg_name }) catch {};
+                std.fmt.format(string.writer(), "p_{s}", .{arg_name}) catch {};
             } else {
                 switch (parsed_arg_type.type_kind) {
                     TypeKind.class => {
                         std.fmt.format(string.writer(), "(if (p_{s} != null) p_{s}._wrappedOwner() else null)", .{ arg_name, arg_name }) catch {};
                     },
                     TypeKind.primitive => {
-                        std.fmt.format(string.writer(), "&p_{s}_encoded", .{ arg_name }) catch {};
+                        std.fmt.format(string.writer(), "&p_{s}_encoded", .{arg_name}) catch {};
                     },
                     TypeKind.enum_, TypeKind.bitfield => {
-                        std.fmt.format(string.writer(), "&p_{s}", .{ arg_name }) catch {};
+                        std.fmt.format(string.writer(), "&p_{s}", .{arg_name}) catch {};
                     },
                     else => {
-                        std.fmt.format(string.writer(), "p_{s}", .{ arg_name }) catch {};
-                    }
+                        std.fmt.format(string.writer(), "p_{s}", .{arg_name}) catch {};
+                    },
                 }
             }
 
@@ -646,7 +636,6 @@ fn stringArgs(arguments: ?*const std.json.Array) String { //Must deinit string
     }
     return string;
 }
-
 
 fn filterPutUniqueBuiltinClass(parsed_type: *const ParsedType, used: *std.StringHashMap(void)) void {
     switch (parsed_type.type_kind) {
@@ -666,8 +655,7 @@ fn filterPutUniqueBuiltinClass(parsed_type: *const ParsedType, used: *std.String
                 if (isBuiltinType(class)) {
                     used.put(class, {}) catch {};
                 }
-            }
-            else if (isClassEnum(parsed_type.undecorated_json_type)) {
+            } else if (isClassEnum(parsed_type.undecorated_json_type)) {
                 const class = enumOrBitFieldGetClass(parsed_type.undecorated_json_type);
                 if (isBuiltinType(class)) {
                     used.put(class, {}) catch {};
@@ -700,8 +688,7 @@ fn filterPutUniqueClass(parsed_type: *const ParsedType, used: *std.StringHashMap
                 if (!isBuiltinType(class)) {
                     used.put(class, {}) catch {};
                 }
-            }
-            else if (isClassEnum(parsed_type.undecorated_json_type)) {
+            } else if (isClassEnum(parsed_type.undecorated_json_type)) {
                 const class = enumOrBitFieldGetClass(parsed_type.undecorated_json_type);
                 if (!isBuiltinType(class)) {
                     used.put(class, {}) catch {};
@@ -742,7 +729,6 @@ fn filterPutUniqueGlobalEnums(parsed_type: *const ParsedType, used: *std.StringH
     }
 }
 
-
 fn getUsedTypesByFunction(function: *const std.json.ObjectMap, json_types: *std.ArrayList([]const u8)) void {
     if (function.get("return_type")) |get_return_type| {
         json_types.append(get_return_type.string) catch {};
@@ -775,7 +761,6 @@ fn getUsedTypesByClass(class: *const std.json.ObjectMap, json_types: *std.ArrayL
         }
     }
 }
-
 
 fn generateEnumValues(values: *const std.json.Array, string: *String, identation: comptime_int) !void {
     //NOTE: Zig disallows multiple enumerations with the same value unlike C so we need to handle it...
@@ -813,12 +798,11 @@ fn generateEnums(enums: *const std.json.Array, string: *String, identation: comp
         }
 
         const whitespace = "    " ** identation;
-        try std.fmt.format(string.writer(), whitespace ++ "pub const {s} = enum(i32) {{\n", .{ enum_name });
+        try std.fmt.format(string.writer(), whitespace ++ "pub const {s} = enum(i32) {{\n", .{enum_name});
         try generateEnumValues(&values, string, identation + 1);
         try string.appendSlice(whitespace ++ "};\n\n"); // Enum end
     }
 }
-
 
 fn generateClass(class: *const std.json.ObjectMap) !String { //Must deinit string
     var string = String.init(std.heap.page_allocator);
@@ -935,11 +919,11 @@ fn generateClass(class: *const std.json.ObjectMap) !String { //Must deinit strin
 
     // Class struct definition
     {
-        try std.fmt.format(string.writer(), "pub const {s} = struct {{\n\n", .{ stripped_class_name.items }); // Extra { to escape it
+        try std.fmt.format(string.writer(), "pub const {s} = struct {{\n\n", .{stripped_class_name.items}); // Extra { to escape it
 
         try string.appendSlice("    const Self = @This();\n\n");
 
-        try std.fmt.format(string.writer(),"    pub const GodotClass = GDExtensionClass(Self, {s});\n", .{ stripped_base_name.items });
+        try std.fmt.format(string.writer(), "    pub const GodotClass = GDExtensionClass(Self, {s});\n", .{stripped_base_name.items});
         try string.appendSlice("    pub usingnamespace GodotClass;\n");
         try string.appendSlice("    _godot_class: GodotClass,\n\n");
     }
@@ -967,11 +951,11 @@ fn generateClass(class: *const std.json.ObjectMap) !String { //Must deinit strin
                 if (!std.mem.eql(u8, constant_type, "int")) {
                     continue;
                 }
- 
-                try std.fmt.format(value_string.writer(), "{s}", .{ constant_value });
+
+                try std.fmt.format(value_string.writer(), "{s}", .{constant_value});
             } else {
                 const constant_value = constant_object.get("value").?.integer;
-                try std.fmt.format(value_string.writer(), "{}", .{ constant_value });
+                try std.fmt.format(value_string.writer(), "{}", .{constant_value});
             }
 
             const convention_name = toSnakeCase(constant_name);
@@ -992,20 +976,18 @@ fn generateClass(class: *const std.json.ObjectMap) !String { //Must deinit strin
     {
         try virtuals_string.appendSlice("    pub fn bindVirtuals(comptime T: type, comptime B: type) void {\n");
         if (class.get("inherits")) |_| {
-            try std.fmt.format(virtuals_string.writer(), "        {s}.bindVirtuals(T, B);\n", .{ stripped_base_name.items });
+            try std.fmt.format(virtuals_string.writer(), "        {s}.bindVirtuals(T, B);\n", .{stripped_base_name.items});
         } else {
             try virtuals_string.appendSlice("        _ = T; _ = B;\n");
         }
     }
 
     if (isClassSingleton(class_name)) {
-        try string.appendSlice(
-            "    pub fn _getSingleton() *Self {\n" ++
+        try string.appendSlice("    pub fn _getSingleton() *Self {\n" ++
             "        const __class_name = Self.getClassStatic();\n" ++
             "        const __singleton_obj = gd.interface.?.global_get_singleton.?(__class_name._nativePtr());\n" ++
             "        return @alignCast(@ptrCast(gd.interface.?.object_get_instance_binding.?(__singleton_obj, gd.token, Self._getBindingCallbacks())));\n" ++
-            "    }\n\n"
-        );
+            "    }\n\n");
     }
 
     if (class.get("methods")) |get_methods| {
@@ -1055,7 +1037,7 @@ fn generateClass(class: *const std.json.ObjectMap) !String { //Must deinit strin
                 defer camel_method_name.deinit();
 
                 // Bind
-                try std.fmt.format(virtuals_string.writer(), "        if (comptime _ClassDB.findVirtualMethodClass(T, \"{s}\")) |overrided| {{\n", .{ camel_method_name.items });
+                try std.fmt.format(virtuals_string.writer(), "        if (comptime _ClassDB.findVirtualMethodClass(T, \"{s}\")) |overrided| {{\n", .{camel_method_name.items});
                 try std.fmt.format(virtuals_string.writer(), "            _ClassDB.bindVirtualMethod(T, overrided.{s}, \"{s}\", .{{}});\n", .{ camel_method_name.items, escaped_method_name.items });
                 try virtuals_string.appendSlice("        }\n");
 
@@ -1066,25 +1048,20 @@ fn generateClass(class: *const std.json.ObjectMap) !String { //Must deinit strin
                         const argument = arguments_item.object;
 
                         const arg_name = argument.get("name").?.string;
-                        try std.fmt.format(string.writer(), "        _ = p_{s};\n", .{ arg_name });
+                        try std.fmt.format(string.writer(), "        _ = p_{s};\n", .{arg_name});
                     }
                 }
                 if (has_return_value) {
-                    try std.fmt.format(string.writer(), "        return _Variant.defaultConstruct({s});\n", .{ return_string_type.items });
+                    try std.fmt.format(string.writer(), "        return _Variant.defaultConstruct({s});\n", .{return_string_type.items});
                 }
             } else {
                 try string.appendSlice("        const __class_name = Self.getClassStatic();\n");
 
-                try std.fmt.format(string.writer(),
-                    "        var __method_name = StringName.initUtf8(\"{s}\");\n",
-                    .{ escaped_method_name.items });
+                try std.fmt.format(string.writer(), "        var __method_name = StringName.initUtf8(\"{s}\");\n", .{escaped_method_name.items});
 
-                try string.appendSlice(
-                    "        defer __method_name.deinit();\n");
+                try string.appendSlice("        defer __method_name.deinit();\n");
 
-                try std.fmt.format(string.writer(), 
-                    "        const _gde_method_bind = gd.interface.?.classdb_get_method_bind.?(__class_name._nativePtr(), __method_name._nativePtr(), {});\n", 
-                    .{ method_hash });
+                try std.fmt.format(string.writer(), "        const _gde_method_bind = gd.interface.?.classdb_get_method_bind.?(__class_name._nativePtr(), __method_name._nativePtr(), {});\n", .{method_hash});
 
                 // Method call args
                 const args_encoding = stringArgsEncoding(arg_arguments);
@@ -1096,19 +1073,19 @@ fn generateClass(class: *const std.json.ObjectMap) !String { //Must deinit strin
 
                 const no_return = std.mem.eql(u8, return_string_type.items, "void");
                 if (is_vararg) {
-                    try std.fmt.format(string.writer(), "        const ret = gd.callMbRet(_gde_method_bind, self._wrappedOwner(), .{{ {s} }} ++ p_vararg);\n", .{ args_tuple.items });
+                    try std.fmt.format(string.writer(), "        const ret = gd.callMbRet(_gde_method_bind, self._wrappedOwner(), .{{ {s} }} ++ p_vararg);\n", .{args_tuple.items});
                     if (no_return) {
                         try string.appendSlice("        _ = ret;\n");
                     } else {
                         if (std.mem.eql(u8, return_string_type.items, "Variant")) {
                             try string.appendSlice("        return ret;\n");
                         } else {
-                            try std.fmt.format(string.writer(), "        return ret.as({s});\n", .{ return_string_type.items });
+                            try std.fmt.format(string.writer(), "        return ret.as({s});\n", .{return_string_type.items});
                         }
                     }
                 } else {
                     if (std.mem.eql(u8, return_string_type.items, "void")) { // No return
-                        try std.fmt.format(string.writer(), "        gd.callNativeMbNoRet(_gde_method_bind, self._wrappedOwner(), .{{ {s} }});\n", .{ args_tuple.items });
+                        try std.fmt.format(string.writer(), "        gd.callNativeMbNoRet(_gde_method_bind, self._wrappedOwner(), .{{ {s} }});\n", .{args_tuple.items});
                     } else {
                         if (parsed_return_type.type_kind == TypeKind.class) {
                             try std.fmt.format(string.writer(), "        return gd.callNativeMbRetObj({s}, _gde_method_bind, self._wrappedOwner(), .{{ {s} }});\n", .{ return_string_type.items, args_tuple.items });
@@ -1158,7 +1135,6 @@ fn generateClassBindings(classes: *const std.json.Array) !void {
         try class_file.writeAll(file_string.items);
     }
 }
-
 
 const StructField = struct {
     raw_type: []const u8,
@@ -1256,7 +1232,7 @@ fn extractFormatFields(format: []const u8, fields: *std.ArrayList(StructField)) 
             }
         }
 
-        const field = StructField {
+        const field = StructField{
             .raw_type = raw_type,
             .pointer = pointer,
             .array = array,
@@ -1269,7 +1245,6 @@ fn extractFormatFields(format: []const u8, fields: *std.ArrayList(StructField)) 
         }
     }
 }
-
 
 fn unformattedEnumConverted(raw_type: []const u8) String { //Must deinit string //Assumes parameter isUnformattedEnum()
     const needle = "::";
@@ -1356,10 +1331,10 @@ fn generateNativeStruct(native_struct: *const std.json.ObjectMap) !String { //Mu
         try string.appendSlice("\n");
     }
 
-    try std.fmt.format(string.writer(), "pub const {s} = extern struct {{\n", .{ stripped_class_name.items });
+    try std.fmt.format(string.writer(), "pub const {s} = extern struct {{\n", .{stripped_class_name.items});
 
     for (fields.items) |field| {
-        try std.fmt.format(string.writer(), "    {s}: ", .{ field.identifier });
+        try std.fmt.format(string.writer(), "    {s}: ", .{field.identifier});
 
         var i: usize = 0;
         while (i < field.pointer) : (i += 1) {
@@ -1367,12 +1342,12 @@ fn generateNativeStruct(native_struct: *const std.json.ObjectMap) !String { //Mu
         }
 
         if (field.array > 0) {
-            try std.fmt.format(string.writer(), "[{}]", .{ field.array });
+            try std.fmt.format(string.writer(), "[{}]", .{field.array});
         }
 
         const converted_type = structRawTypeToZigType(field.raw_type);
         defer converted_type.deinit();
-        try std.fmt.format(string.writer(), "{s},\n", .{ converted_type.items });
+        try std.fmt.format(string.writer(), "{s},\n", .{converted_type.items});
     }
 
     try string.appendSlice("};\n"); // Struct end
@@ -1402,7 +1377,6 @@ fn generateNativeStructs(native_structs: *const std.json.Array) !void {
         try class_file.writeAll(file_string.items);
     }
 }
-
 
 fn writeImportString(string: *String, class: *const std.json.ObjectMap) !void {
     const class_name = class.get("name").?.string;
@@ -1439,7 +1413,6 @@ fn generatePackageClassImports(classes: *const std.json.Array, native_structs: *
     try imports_file.writeAll(string.items);
 }
 
-
 fn getVariantTypeEnum(string: []const u8) String { //Must deinit string
     if (std.mem.eql(u8, string, "Variant")) { // Special case...
         var converted = String.init(std.heap.page_allocator);
@@ -1465,7 +1438,7 @@ fn getBuiltinClassSize(string: []const u8, class_sizes: *const std.json.Array) i
 }
 
 fn getOperatorNameIdentifier(string: []const u8) []const u8 {
-    const operators = [_][2][]const u8 {
+    const operators = [_][2][]const u8{
         .{ "==", "equal" },
         .{ "!=", "notEqual" },
         .{ "<", "less" },
@@ -1548,7 +1521,13 @@ fn getUsedBuiltinClasses(class: *const std.json.ObjectMap) std.StringHashMap(voi
         const operators = get_operators.array;
         for (operators.items) |item| {
             const operator = item.object;
-            const right_type = operator.get("right_type").?.string;
+            const maybe_right_type = operator.get("right_type");
+            var right_type: []const u8 = undefined;
+            if (maybe_right_type) |mrt| {
+                right_type = mrt.string;
+            } else {
+                continue;
+            }
             if (isBuiltinType(right_type)) {
                 classes.put(right_type, {}) catch {};
             }
@@ -1561,7 +1540,6 @@ fn getUsedBuiltinClasses(class: *const std.json.ObjectMap) std.StringHashMap(voi
 
     return classes;
 }
-
 
 fn stringBuiltinConstructorSignature(arguments: ?*const std.json.Array) String { //Must deinit string
     var arg_type_names = String.init(std.heap.page_allocator);
@@ -1592,13 +1570,13 @@ fn stringBuiltinConstructorSignature(arguments: ?*const std.json.Array) String {
 
     var string = String.init(std.heap.page_allocator);
 
-    std.fmt.format(string.writer(),
-        "    pub fn init{s}({s}) Self {{\n",
-        .{ arg_type_names.items, signature_args.items, }) catch {};
+    std.fmt.format(string.writer(), "    pub fn init{s}({s}) Self {{\n", .{
+        arg_type_names.items,
+        signature_args.items,
+    }) catch {};
 
     return string;
 }
-
 
 fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const std.json.Array) !String { //Must deinit string
     var class_string = String.init(std.heap.page_allocator);
@@ -1641,13 +1619,13 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
 
     // Class struct definition
     {
-        try std.fmt.format(class_string.writer(), "pub const {s} = extern struct {{\n\n", .{ class_name }); // Extra { to escape it
+        try std.fmt.format(class_string.writer(), "pub const {s} = extern struct {{\n\n", .{class_name}); // Extra { to escape it
 
         const class_size = getBuiltinClassSize(class_name, class_sizes);
-        try std.fmt.format(class_string.writer(), "    _opaque: [{}]u8,\n\n", .{ class_size }); // Extra { to escape it
+        try std.fmt.format(class_string.writer(), "    _opaque: [{}]u8,\n\n", .{class_size}); // Extra { to escape it
 
         // Import extension methods namespaced here, so we can use them as if they were builtin
-        try std.fmt.format(class_string.writer(), "    pub usingnamespace @import(\"../../variant/_extension_methods.zig\").{s}Ext;\n\n", .{ class_name });
+        try std.fmt.format(class_string.writer(), "    pub usingnamespace @import(\"../../variant/_extension_methods.zig\").{s}Ext;\n\n", .{class_name});
 
         try class_string.appendSlice("    const Self = @This();\n\n");
     }
@@ -1679,22 +1657,20 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
         // De/con/structors
         try init_ctr_binds.appendSlice("    pub fn initConstructorBinds() void {\n");
         // Convenience shorthands
-        try std.fmt.format(init_ctr_binds.writer(), "        const this_vt = gi.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_{s};\n", .{ variant_type_enum.items });
+        try std.fmt.format(init_ctr_binds.writer(), "        const this_vt = gi.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_{s};\n", .{variant_type_enum.items});
         try init_ctr_binds.appendSlice("        const ptr_ctor = gd.interface.?.variant_get_ptr_constructor.?;\n");
 
         // Regular methods
         try init_mb_binds.appendSlice("    pub fn initMethodBinds() void {\n");
         // Convenience shorthands
-        try std.fmt.format(init_mb_binds.writer(), "        const this_vt = gi.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_{s};\n", .{ variant_type_enum.items });
-        try init_mb_binds.appendSlice(
-            "        const ptr_mb = gd.interface.?.variant_get_ptr_builtin_method.?;\n" ++
+        try std.fmt.format(init_mb_binds.writer(), "        const this_vt = gi.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_{s};\n", .{variant_type_enum.items});
+        try init_mb_binds.appendSlice("        const ptr_mb = gd.interface.?.variant_get_ptr_builtin_method.?;\n" ++
             "        const ptr_op = gd.interface.?.variant_get_ptr_operator_evaluator.?;\n");
     }
 
     // Implicit methods
     {
-        try impl_binds.appendSlice(
-            "    pub inline fn _nativePtr(self: *const Self) gi.GDExtensionTypePtr {\n" ++
+        try impl_binds.appendSlice("    pub inline fn _nativePtr(self: *const Self) gi.GDExtensionTypePtr {\n" ++
             "        return @constCast(@ptrCast(&self._opaque));\n" ++
             "    }\n\n");
     }
@@ -1705,8 +1681,7 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
 
         try init_ctr_binds.appendSlice("        binds.destructor = gd.interface.?.variant_get_ptr_destructor.?(this_vt);\n");
 
-        try impl_binds.appendSlice(
-            "    pub fn deinit(self: *Self) void {\n" ++
+        try impl_binds.appendSlice("    pub fn deinit(self: *Self) void {\n" ++
             "        binds.destructor.?(&self._opaque);\n" ++
             "    }\n\n");
     }
@@ -1717,7 +1692,7 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
             const constructor = item.object;
 
             const index = constructor.get("index").?.integer;
-            try std.fmt.format(def_binds.writer(), "        constructor_{}: gi.GDExtensionPtrConstructor,\n", .{ index });
+            try std.fmt.format(def_binds.writer(), "        constructor_{}: gi.GDExtensionPtrConstructor,\n", .{index});
 
             try std.fmt.format(init_ctr_binds.writer(), "        binds.constructor_{} = ptr_ctor(this_vt, {});\n", .{ index, index });
 
@@ -1734,9 +1709,8 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
             defer args_tuple.deinit();
 
             try std.fmt.format(impl_binds.writer(), "        var self = std.mem.zeroes(Self);\n" ++
-                    "        gd.callBuiltinConstructor(binds.constructor_{}, @ptrCast(&self._opaque), .{{ {s} }});\n" ++
-                    "        return self;\n",
-                .{ index, args_tuple.items });
+                "        gd.callBuiltinConstructor(binds.constructor_{}, @ptrCast(&self._opaque), .{{ {s} }});\n" ++
+                "        return self;\n", .{ index, args_tuple.items });
 
             // Constructor end
             try impl_binds.appendSlice("    }\n\n");
@@ -1754,11 +1728,9 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
 
             const method_hash = method.get("hash").?.integer;
 
-            try std.fmt.format(def_binds.writer(), "        {s}: gi.GDExtensionPtrBuiltInMethod,\n", .{ escaped_method_name.items });
+            try std.fmt.format(def_binds.writer(), "        {s}: gi.GDExtensionPtrBuiltInMethod,\n", .{escaped_method_name.items});
 
-            try std.fmt.format(init_mb_binds.writer(),
-                "        {{ var __method_name = StringName.initUtf8(\"{s}\"); defer __method_name.deinit(); binds.{s} = ptr_mb(this_vt, __method_name._nativePtr(), {}); }}\n",
-                . { method_name, escaped_method_name.items, method_hash });
+            try std.fmt.format(init_mb_binds.writer(), "        {{ var __method_name = StringName.initUtf8(\"{s}\"); defer __method_name.deinit(); binds.{s} = ptr_mb(this_vt, __method_name._nativePtr(), {}); }}\n", .{ method_name, escaped_method_name.items, method_hash });
 
             const parsed_return_type = blk: {
                 var json_return_type: []const u8 = "void";
@@ -1797,18 +1769,14 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
                     if (std.mem.eql(u8, return_string_type.items, "Variant")) {
                         try impl_binds.appendSlice("        return ret;\n");
                     } else {
-                        try std.fmt.format(impl_binds.writer(), "        return ret.as({s});\n", .{ return_string_type.items });
+                        try std.fmt.format(impl_binds.writer(), "        return ret.as({s});\n", .{return_string_type.items});
                     }
                 }
             } else {
                 if (no_return) { // No return
-                    try std.fmt.format(impl_binds.writer(),
-                        "        gd.callBuiltinMbNoRet(binds.{s}, self._nativePtr(), .{{ {s} }});\n",
-                        .{ escaped_method_name.items, args_tuple.items });
+                    try std.fmt.format(impl_binds.writer(), "        gd.callBuiltinMbNoRet(binds.{s}, self._nativePtr(), .{{ {s} }});\n", .{ escaped_method_name.items, args_tuple.items });
                 } else {
-                    try std.fmt.format(impl_binds.writer(),
-                        "        return gd.callBuiltinMbRet({s}, binds.{s}, self._nativePtr(), .{{ {s} }});\n",
-                        .{ return_string_type.items, escaped_method_name.items, args_tuple.items });
+                    try std.fmt.format(impl_binds.writer(), "        return gd.callBuiltinMbRet({s}, binds.{s}, self._nativePtr(), .{{ {s} }});\n", .{ return_string_type.items, escaped_method_name.items, args_tuple.items });
                 }
             }
 
@@ -1823,7 +1791,13 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
             const operator = item.object;
 
             const name = operator.get("name").?.string;
-            const right_type = operator.get("right_type").?.string;
+            const maybe_right_type = operator.get("right_type");
+            var right_type: []const u8 = undefined;
+            if (maybe_right_type) |mrt| {
+                right_type = mrt.string;
+            } else {
+                continue;
+            }
             const return_type = operator.get("return_type").?.string;
 
             const operator_identifier = getOperatorNameIdentifier(name);
@@ -1832,7 +1806,7 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
             defer bind_name.deinit();
             try std.fmt.format(bind_name.writer(), "operator_{s}_{s}", .{ operator_identifier, right_type });
 
-            try std.fmt.format(def_binds.writer(), "        {s}: gi.GDExtensionPtrOperatorEvaluator,\n", .{ bind_name.items });
+            try std.fmt.format(def_binds.writer(), "        {s}: gi.GDExtensionPtrOperatorEvaluator,\n", .{bind_name.items});
 
             const operator_type_enum = getVariantTypeEnum(operator_identifier);
             defer operator_type_enum.deinit();
@@ -1840,9 +1814,7 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
             const right_variant_type_enum = getVariantTypeEnum(right_type);
             defer right_variant_type_enum.deinit();
 
-            try std.fmt.format(init_mb_binds.writer(),
-                "        binds.{s} = ptr_op(gi.GDExtensionVariantOperator.GDEXTENSION_VARIANT_OP_{s}, this_vt, gi.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_{s});\n",
-                . { bind_name.items, operator_type_enum.items, right_variant_type_enum.items });
+            try std.fmt.format(init_mb_binds.writer(), "        binds.{s} = ptr_op(gi.GDExtensionVariantOperator.GDEXTENSION_VARIANT_OP_{s}, this_vt, gi.GDExtensionVariantType.GDEXTENSION_VARIANT_TYPE_{s});\n", .{ bind_name.items, operator_type_enum.items, right_variant_type_enum.items });
 
             // Method signature
             const parsed_right_type = ParsedType.new(right_type);
@@ -1853,12 +1825,10 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
             const string_return_type = parsed_return_type.stringConverted(true);
             defer string_return_type.deinit();
 
-            try std.fmt.format(impl_binds.writer(),
-                "    pub fn {s}{s}(self: *const Self, other: {s}) {s} {{\n",
-                .{ operator_identifier, right_type, string_right_type.items, string_return_type.items });
-            
+            try std.fmt.format(impl_binds.writer(), "    pub fn {s}{s}(self: *const Self, other: {s}) {s} {{\n", .{ operator_identifier, right_type, string_right_type.items, string_return_type.items });
+
             // Method content
-            try std.fmt.format(impl_binds.writer(), "        return gd.callBuiltinOperatorPtr({s}, binds.{s}, @ptrCast(&self._opaque), @ptrCast(other));\n", .{ string_return_type.items, bind_name.items});
+            try std.fmt.format(impl_binds.writer(), "        return gd.callBuiltinOperatorPtr({s}, binds.{s}, @ptrCast(&self._opaque), @ptrCast(other));\n", .{ string_return_type.items, bind_name.items });
 
             // Method end
             try impl_binds.appendSlice("    }\n\n");
@@ -1896,7 +1866,7 @@ fn generateBuiltinClass(class: *const std.json.ObjectMap, class_sizes: *const st
 
 fn isBuiltinClassExcluded(string: []const u8) bool {
     //Don't generate bindings for primitives or math types
-    const excluded_types = [_][]const u8 {
+    const excluded_types = [_][]const u8{
         "AABB",
         "Basis",
         "bool",
@@ -1955,7 +1925,6 @@ fn generateBuiltinClassBindings(classes: *const std.json.Array, class_sizes: *co
     }
 }
 
-
 fn generateUtilityFunction(function: *const std.json.ObjectMap) !String {
     var string = String.init(std.heap.page_allocator);
 
@@ -1984,9 +1953,9 @@ fn generateUtilityFunction(function: *const std.json.ObjectMap) !String {
     try string.appendSlice(function_signature.items);
 
     // Function content
-    try std.fmt.format(string.writer(), "        var __function_name = StringName.initUtf8(\"{s}\");\n", .{ escaped_function_name.items });
+    try std.fmt.format(string.writer(), "        var __function_name = StringName.initUtf8(\"{s}\");\n", .{escaped_function_name.items});
     try string.appendSlice("        defer __function_name.deinit();\n");
-    try std.fmt.format(string.writer(),"        const _gde_function_bind = gd.interface.?.variant_get_ptr_utility_function.?(__function_name._nativePtr(), {});\n", .{ method_hash });
+    try std.fmt.format(string.writer(), "        const _gde_function_bind = gd.interface.?.variant_get_ptr_utility_function.?(__function_name._nativePtr(), {});\n", .{method_hash});
 
     // Function call args
     const args_encoding = stringArgsEncoding(arg_arguments);
@@ -1998,19 +1967,19 @@ fn generateUtilityFunction(function: *const std.json.ObjectMap) !String {
 
     const no_return = std.mem.eql(u8, return_string_type.items, "void");
     if (is_vararg) {
-        try std.fmt.format(string.writer(), "        const ret = gd.callUtilityRet(Variant, _gde_function_bind, .{{ {s} }} ++ p_vararg);\n", .{ args_tuple.items });
+        try std.fmt.format(string.writer(), "        const ret = gd.callUtilityRet(Variant, _gde_function_bind, .{{ {s} }} ++ p_vararg);\n", .{args_tuple.items});
         if (no_return) {
             try string.appendSlice("        _ = ret;\n");
         } else {
             if (std.mem.eql(u8, return_string_type.items, "Variant")) {
                 try string.appendSlice("        return ret;\n");
             } else {
-                try std.fmt.format(string.writer(), "        return ret.as({s});\n", .{ return_string_type.items });
+                try std.fmt.format(string.writer(), "        return ret.as({s});\n", .{return_string_type.items});
             }
         }
     } else {
         if (no_return) {
-            try std.fmt.format(string.writer(), "        gd.callUtilityNoRet(_gde_function_bind, .{{ {s} }});\n", .{ args_tuple.items });
+            try std.fmt.format(string.writer(), "        gd.callUtilityNoRet(_gde_function_bind, .{{ {s} }});\n", .{args_tuple.items});
         } else {
             if (parsed_return_type.type_kind == TypeKind.class) {
                 try std.fmt.format(string.writer(), "        return gd.callUtilityRetObj({s}, _gde_function_bind, .{{ {s} }});\n", .{ return_string_type.items, args_tuple.items });
@@ -2087,7 +2056,6 @@ fn generateUtilityFunctions(functions: *const std.json.Array) !void {
     try class_file.writeAll(string.items);
 }
 
-
 fn generateGlobalEnums(global_enums: *const std.json.Array) !void {
     var string = String.init(std.heap.page_allocator);
     defer string.deinit();
@@ -2098,7 +2066,6 @@ fn generateGlobalEnums(global_enums: *const std.json.Array) !void {
     defer class_file.close();
     try class_file.writeAll(string.items);
 }
-
 
 pub const BuildConfiguration = enum {
     float_32,

@@ -48,7 +48,6 @@ inline fn ptrCallMethod(comptime class: type, comptime function: anytype, instan
     ptrCall(class, function, true, instance, args, r_return);
 }
 
-
 inline fn variantCall(comptime class: type, comptime function: anytype, comptime is_method: bool, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) void {
     const fn_info = @typeInfo(@TypeOf(function)).Fn;
     const struct_instance: ?*class = @ptrCast(@alignCast(instance));
@@ -123,7 +122,7 @@ inline fn variantCallFunction(comptime function: anytype, args: [*c]const gi.GDE
 inline fn variantCallMethod(comptime class: type, comptime function: anytype, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) void {
     const fn_info = @typeInfo(@TypeOf(function)).Fn;
     comptime if (fn_info.params.len == 0) {
-        @compileError("A method needs to take atleast the struct parameter");
+        @compileError("A method needs to take at least the struct parameter");
     };
     comptime if (fn_info.params[0].type.? != *class and fn_info.params[0].type.? != *const class) {
         @compileError("The first parameter of a method should be the struct");
@@ -131,7 +130,6 @@ inline fn variantCallMethod(comptime class: type, comptime function: anytype, in
 
     variantCall(class, function, true, instance, args, r_return);
 }
-
 
 inline fn variantCallValidate(comptime function: anytype, comptime is_method: bool, args: [*c]const gi.GDExtensionConstTypePtr, argument_count: gi.GDExtensionInt, r_error: *gi.GDExtensionCallError) bool {
     const fn_info = @typeInfo(@TypeOf(function)).Fn;
@@ -170,23 +168,19 @@ inline fn variantCallValidate(comptime function: anytype, comptime is_method: bo
     return true;
 }
 
-
 pub fn FunctionPtrCall(comptime function: anytype) type {
     return extern struct {
-
         pub fn functionWrap(method_userdata: ?*anyopaque, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) callconv(.C) void {
             _ = method_userdata;
             _ = instance;
 
             ptrCallFunction(function, args, r_return);
         }
-
     };
 }
 
 pub fn FunctionCall(comptime function: anytype) type {
     return extern struct {
-
         pub fn functionWrap(method_userdata: ?*anyopaque, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, argument_count: gi.GDExtensionInt, r_return: gi.GDExtensionVariantPtr, r_error: [*c]gi.GDExtensionCallError) callconv(.C) void {
             _ = method_userdata;
             _ = instance;
@@ -196,20 +190,17 @@ pub fn FunctionCall(comptime function: anytype) type {
             }
             variantCallFunction(function, args, r_return);
         }
-
     };
 }
 
-
 pub fn MethodPtrCall(comptime class: type, comptime function: anytype) type {
     return extern struct {
-
         pub fn functionWrap(method_userdata: ?*anyopaque, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) callconv(.C) void {
             _ = method_userdata;
 
             const fn_info = @typeInfo(@TypeOf(function)).Fn;
             comptime if (fn_info.params.len == 0) {
-                @compileError("A method needs to take atleast the struct parameter");
+                @compileError("A method needs to take at least the struct parameter");
             };
             comptime if (fn_info.params[0].type.? != *class and fn_info.params[0].type.? != *const class) {
                 @compileError("The first parameter of a method should be the struct");
@@ -217,13 +208,11 @@ pub fn MethodPtrCall(comptime class: type, comptime function: anytype) type {
 
             ptrCallMethod(class, function, instance, args, r_return);
         }
-
     };
 }
 
 pub fn MethodCall(comptime class: type, comptime function: anytype) type {
     return extern struct {
-
         pub fn functionWrap(method_userdata: ?*anyopaque, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, argument_count: gi.GDExtensionInt, r_return: gi.GDExtensionVariantPtr, r_error: [*c]gi.GDExtensionCallError) callconv(.C) void {
             _ = method_userdata;
 
@@ -232,16 +221,13 @@ pub fn MethodCall(comptime class: type, comptime function: anytype) type {
             }
             variantCallMethod(class, function, instance, args, r_return);
         }
-
     };
 }
 
 pub fn VirtualMethodCall(comptime class: type, comptime function: anytype) type {
     return extern struct {
-
         pub fn functionWrap(instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) callconv(.C) void {
             ptrCallMethod(class, function, instance, args, r_return);
         }
-
     };
 }

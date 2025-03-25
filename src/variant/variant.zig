@@ -45,7 +45,6 @@ const StringName = @import("../gen/builtin_classes/string_name.zig").StringName;
 const String = @import("../gen/builtin_classes/string.zig").String;
 
 pub const Variant = struct {
-
     const GODOT_VARIANT_SIZE = 24;
 
     _opaque: [GODOT_VARIANT_SIZE]u8,
@@ -148,7 +147,7 @@ pub const Variant = struct {
             to_type_constructor[i] = gd.interface.?.get_variant_to_type_constructor.?(@enumFromInt(i));
         }
 
-        const gen_types = [_]type {
+        const gen_types = [_]type{
             Array,
             Callable,
             Dictionary,
@@ -217,7 +216,7 @@ pub const Variant = struct {
                         },
                         else => {
                             self = func(&any.?);
-                        }
+                        },
                     }
                 },
                 type_tag.Pointer => {
@@ -225,7 +224,7 @@ pub const Variant = struct {
                 },
                 else => {
                     self = func(&any);
-                }
+                },
             }
         }
         return self;
@@ -481,7 +480,6 @@ pub const Variant = struct {
         return self;
     }
 
-
     pub inline fn defaultConstruct(comptime T: type) T {
         if (@hasDecl(T, "init")) {
             const fn_info = @typeInfo(@TypeOf(T.init)).Fn;
@@ -506,7 +504,6 @@ pub const Variant = struct {
             return defaultConstruct(T);
         }
     }
-
 
     pub fn asBool(self: *const Self) bool {
         return gd.interface.?.variant_booleanize.?(self._nativePtr());
@@ -708,11 +705,9 @@ pub const Variant = struct {
         };
     }
 
-
     pub fn getType(self: *const Self) Type {
         return @enumFromInt(@intFromEnum(gd.interface.?.variant_get_type.?(self._nativePtr())));
     }
-
 
     fn IntAsVariant(comptime T: type) type {
         return struct {
@@ -756,8 +751,7 @@ pub const Variant = struct {
         };
     }
 
-
-    pub fn variantAsType(comptime T: type) (fn(*const Variant) T) {
+    pub fn variantAsType(comptime T: type) (fn (*const Variant) T) {
         const type_info = @typeInfo(T);
         const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
 
@@ -769,7 +763,7 @@ pub const Variant = struct {
                 },
                 else => {
                     return VariantAsObjectClassNonNull(base_type).function; //For convenience, but Godot class pointers may be null, no guarantees
-                }
+                },
             }
         }
 
@@ -817,7 +811,7 @@ pub const Variant = struct {
             Vector3i => {
                 return Variant.asVector3i;
             },
-            Vector4=> {
+            Vector4 => {
                 return Variant.asVector4;
             },
             Vector4i => {
@@ -901,7 +895,7 @@ pub const Variant = struct {
         return variantAsType(T)(self);
     }
 
-    pub fn typeAsVariant(comptime T: type) (fn(*const T) Variant) {
+    pub fn typeAsVariant(comptime T: type) (fn (*const T) Variant) {
         const type_info = @typeInfo(T);
         const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
 
@@ -965,7 +959,7 @@ pub const Variant = struct {
             Vector3i => {
                 return Variant.initVector3i;
             },
-            Vector4=> {
+            Vector4 => {
                 return Variant.initVector4;
             },
             Vector4i => {
@@ -1101,7 +1095,7 @@ pub const Variant = struct {
             Vector3i => {
                 return Type.vector3i;
             },
-            Vector4=> {
+            Vector4 => {
                 return Type.vector4;
             },
             Vector4i => {
@@ -1180,5 +1174,4 @@ pub const Variant = struct {
 
         return Type.variant_max;
     }
-
 };
