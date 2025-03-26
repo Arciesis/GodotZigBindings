@@ -24,9 +24,7 @@ const property_hint_resource_type = 17;
 
 const property_usage_default = 0;
 
-
 pub const ClassDB = struct {
-
     pub var current_level: gi.GDExtensionInitializationLevel = undefined;
 
     pub fn initialize(p_level: gi.GDExtensionInitializationLevel) void {
@@ -37,7 +35,6 @@ pub const ClassDB = struct {
         _ = p_level;
     }
 
-
     fn classStringName(comptime T: type) StringName {
         if (type_utils.isTypeGodotObjectClass(T)) {
             const string_name = StringName.initStringName(T.getClassStatic());
@@ -45,7 +42,6 @@ pub const ClassDB = struct {
         }
         return StringName.init();
     }
-
 
     const StringStorage = extern struct {
         name: StringName,
@@ -70,7 +66,7 @@ pub const ClassDB = struct {
         const Self = @This();
 
         pub fn init(comptime function: anytype, comptime is_method: bool, arg_names: anytype) SignatureInfo {
-            const fn_info = @typeInfo(@TypeOf(function)).Fn;
+            const fn_info = @typeInfo(@TypeOf(function)).@"fn";
             const exclude_struct_offset = if (is_method) 1 else 0; // Offset to exclude the member struct from arguments
             const excluded_argument_count = fn_info.params.len - exclude_struct_offset;
 
@@ -160,12 +156,10 @@ pub const ClassDB = struct {
                 storage.hint.deinit();
             }
         }
-
     };
 
-
     pub fn registerClass(comptime class: type, is_virtual: bool, is_abstract: bool) void {
-        const class_info = gi.GDExtensionClassCreationInfo {
+        const class_info = gi.GDExtensionClassCreationInfo{
             .is_virtual = is_virtual,
             .is_abstract = is_abstract,
             .set_func = class._setBind,
@@ -194,7 +188,7 @@ pub const ClassDB = struct {
     }
 
     pub fn bindMethod(comptime class: type, comptime function: anytype, name: []const u8, arg_names: anytype) void {
-        const fn_info = @typeInfo(@TypeOf(function)).Fn;
+        const fn_info = @typeInfo(@TypeOf(function)).@"fn";
 
         comptime if (fn_info.params.len == 0) {
             @compileError("A method needs to take atleast the struct parameter");
@@ -218,7 +212,7 @@ pub const ClassDB = struct {
         var string_name = StringName.initUtf8(name);
         defer string_name.deinit();
 
-        const method_info = gi.GDExtensionClassMethodInfo {
+        const method_info = gi.GDExtensionClassMethodInfo{
             .name = string_name._nativePtr(),
             .method_userdata = null,
             .call_func = wrapper_call.functionWrap,
@@ -250,7 +244,7 @@ pub const ClassDB = struct {
         var string_name = StringName.initUtf8(name);
         defer string_name.deinit();
 
-        const method_info = gi.GDExtensionClassMethodInfo {
+        const method_info = gi.GDExtensionClassMethodInfo{
             .name = string_name._nativePtr(),
             .method_userdata = null,
             .call_func = wrapper_call.functionWrap,
@@ -275,7 +269,6 @@ pub const ClassDB = struct {
         const wrapper_call = BindWrapper.VirtualMethodCall(class, function);
         class._addVirtualMethod(name, wrapper_call.functionWrap);
     }
-
 
     fn PropertyDefaultSetter(comptime class: type, comptime field_name: []const u8) type {
         return struct {
@@ -379,7 +372,6 @@ pub const ClassDB = struct {
         }
     }
 
-
     pub fn findVirtualMethodClass(comptime T: type, comptime method_name: []const u8) ?type {
         var class = T;
         while (true) {
@@ -394,7 +386,6 @@ pub const ClassDB = struct {
         return null;
     }
 
-
     pub fn castTo(instance: anytype, comptime class: type) ?*class {
         const class_name = class.getClassStatic();
         const class_tag = gd.interface.?.classdb_get_class_tag.?(class_name._nativePtr());
@@ -404,5 +395,4 @@ pub const ClassDB = struct {
         }
         return @alignCast(@ptrCast(gd.interface.?.object_get_instance_binding.?(casted, gd.token, class._getBindingCallbacks())));
     }
-
 };

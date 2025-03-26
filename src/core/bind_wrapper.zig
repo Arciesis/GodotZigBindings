@@ -7,7 +7,7 @@ const type_utils = @import("type_utils.zig");
 const Variant = @import("../variant/variant.zig").Variant;
 
 inline fn ptrCall(comptime class: type, comptime function: anytype, comptime is_method: bool, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) void {
-    const fn_info = @typeInfo(@TypeOf(function)).Fn;
+    const fn_info = @typeInfo(@TypeOf(function)).@"fn";
     const struct_instance: ?*class = @ptrCast(@alignCast(instance));
 
     // Pass call arguments as either dereferenced value or the pointer itself, matching the signature
@@ -49,7 +49,7 @@ inline fn ptrCallMethod(comptime class: type, comptime function: anytype, instan
 }
 
 inline fn variantCall(comptime class: type, comptime function: anytype, comptime is_method: bool, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) void {
-    const fn_info = @typeInfo(@TypeOf(function)).Fn;
+    const fn_info = @typeInfo(@TypeOf(function)).@"fn";
     const struct_instance: ?*class = @ptrCast(@alignCast(instance));
 
     // Need to store the value of every converted variant
@@ -120,7 +120,7 @@ inline fn variantCallFunction(comptime function: anytype, args: [*c]const gi.GDE
 }
 
 inline fn variantCallMethod(comptime class: type, comptime function: anytype, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) void {
-    const fn_info = @typeInfo(@TypeOf(function)).Fn;
+    const fn_info = @typeInfo(@TypeOf(function)).@"fn";
     comptime if (fn_info.params.len == 0) {
         @compileError("A method needs to take at least the struct parameter");
     };
@@ -132,7 +132,7 @@ inline fn variantCallMethod(comptime class: type, comptime function: anytype, in
 }
 
 inline fn variantCallValidate(comptime function: anytype, comptime is_method: bool, args: [*c]const gi.GDExtensionConstTypePtr, argument_count: gi.GDExtensionInt, r_error: *gi.GDExtensionCallError) bool {
-    const fn_info = @typeInfo(@TypeOf(function)).Fn;
+    const fn_info = @typeInfo(@TypeOf(function)).@"fn";
     const variant_arg_count = if (is_method) fn_info.params.len - 1 else fn_info.params.len;
     if (argument_count < variant_arg_count) {
         r_error._error = gi.GDExtensionCallErrorType.GDEXTENSION_CALL_ERROR_TOO_FEW_ARGUMENTS;
@@ -198,7 +198,7 @@ pub fn MethodPtrCall(comptime class: type, comptime function: anytype) type {
         pub fn functionWrap(method_userdata: ?*anyopaque, instance: gi.GDExtensionClassInstancePtr, args: [*c]const gi.GDExtensionConstTypePtr, r_return: gi.GDExtensionTypePtr) callconv(.C) void {
             _ = method_userdata;
 
-            const fn_info = @typeInfo(@TypeOf(function)).Fn;
+            const fn_info = @typeInfo(@TypeOf(function)).@"fn";
             comptime if (fn_info.params.len == 0) {
                 @compileError("A method needs to take at least the struct parameter");
             };

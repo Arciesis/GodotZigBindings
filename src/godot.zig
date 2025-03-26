@@ -59,7 +59,6 @@ pub fn init(p_interface: *const gi.GDExtensionInterface, p_library: gi.GDExtensi
     return true;
 }
 
-
 pub fn callBuiltinConstructor(constructor: gi.GDExtensionPtrConstructor, base: gi.GDExtensionTypePtr, args: anytype) void {
     var payload: [args.len]gi.GDExtensionConstTypePtr = undefined;
     inline for (args, 0..) |arg, i| {
@@ -84,7 +83,7 @@ pub fn callBuiltinMbRet(comptime T: type, method: gi.GDExtensionPtrBuiltInMethod
 
     // Godot calling convention handles all integers, floats and bool to have certain size, so we must handle conversion...
     const type_info = @typeInfo(T);
-    const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
+    const type_tag = @typeInfo(std.builtin.Type).@"union".tag_type.?;
     switch (type_info) {
         type_tag.Bool => {
             var ret: u8 = undefined;
@@ -106,7 +105,7 @@ pub fn callBuiltinMbRet(comptime T: type, method: gi.GDExtensionPtrBuiltInMethod
             var ret: T = Variant.defaultConstruct(T);
             method.?(base, &payload, &ret, payload.len);
             return ret;
-        }
+        },
     }
 }
 
@@ -121,7 +120,6 @@ pub fn callBuiltinPtrGetter(comptime T: type, getter: gi.GDExtensionPtrGetter, b
     getter.?(base, &ret);
     return ret;
 }
-
 
 pub fn callMbRet(mb: gi.GDExtensionMethodBindPtr, instance: ?*anyopaque, args: anytype) Variant {
     var variants: [args.len]Variant = undefined;
@@ -155,20 +153,20 @@ pub fn callNativeMbRet(comptime T: type, mb: gi.GDExtensionMethodBindPtr, instan
 
     // Godot calling convention handles all integers, floats and bool to have certain size, so we must handle conversion...
     const type_info = @typeInfo(T);
-    const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
+    const type_tag = @typeInfo(std.builtin.Type).@"union".tag_type.?;
     switch (type_info) {
-        type_tag.Bool => {
+        type_tag.bool => {
             var ret: u8 = undefined;
             interface.?.object_method_bind_ptrcall.?(mb, instance, &payload, &ret);
             return @as(bool, ret != 0);
         },
-        type_tag.Int => {
-            const Int = if (type_info.Int.signedness == .unsigned) u64 else i64;
-            var ret: Int = undefined;
+        type_tag.int => {
+            const int = if (type_info.int.signedness == .unsigned) u64 else i64;
+            var ret: int = undefined;
             interface.?.object_method_bind_ptrcall.?(mb, instance, &payload, &ret);
             return @truncate(ret);
         },
-        type_tag.Float => {
+        type_tag.float => {
             var ret: f64 = undefined;
             interface.?.object_method_bind_ptrcall.?(mb, instance, &payload, &ret);
             return @floatCast(ret);
@@ -177,7 +175,7 @@ pub fn callNativeMbRet(comptime T: type, mb: gi.GDExtensionMethodBindPtr, instan
             var ret: T = Variant.defaultConstruct(T);
             interface.?.object_method_bind_ptrcall.?(mb, instance, &payload, &ret);
             return ret;
-        }
+        },
     }
 }
 
@@ -195,7 +193,6 @@ pub fn callNativeMbRetObj(comptime ObjectPtr: type, mb: gi.GDExtensionMethodBind
     return @alignCast(@ptrCast(interface.?.object_get_instance_binding.?(ret, token, ObjectType._getBindingCallbacks())));
 }
 
-
 pub fn callUtilityNoRet(func: gi.GDExtensionPtrUtilityFunction, args: anytype) void {
     var payload: [args.len]gi.GDExtensionConstTypePtr = undefined;
     inline for (args, 0..) |arg, i| {
@@ -212,20 +209,20 @@ pub fn callUtilityRet(comptime T: type, func: gi.GDExtensionPtrUtilityFunction, 
 
     // Godot calling convention handles all integers, floats and bool to have certain size, so we must handle conversion...
     const type_info = @typeInfo(T);
-    const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
+    const type_tag = @typeInfo(std.builtin.Type).@"union".tag_type.?;
     switch (type_info) {
-        type_tag.Bool => {
+        type_tag.bool => {
             var ret: u8 = undefined;
             func.?(&ret, &payload, payload.len);
             return @as(bool, ret != 0);
         },
-        type_tag.Int => {
+        type_tag.int => {
             const Int = if (type_info.Int.signedness == .unsigned) u64 else i64;
             var ret: Int = undefined;
             func.?(&ret, &payload, payload.len);
             return @truncate(ret);
         },
-        type_tag.Float => {
+        type_tag.float => {
             var ret: f64 = undefined;
             func.?(&ret, &payload, payload.len);
             return @floatCast(ret);
@@ -234,7 +231,7 @@ pub fn callUtilityRet(comptime T: type, func: gi.GDExtensionPtrUtilityFunction, 
             var ret: T = Variant.defaultConstruct(T);
             func.?(&ret, &payload, payload.len);
             return ret;
-        }
+        },
     }
 }
 

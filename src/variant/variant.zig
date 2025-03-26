@@ -206,12 +206,12 @@ pub const Variant = struct {
         } else {
             const func = typeAsVariant(type_utils.BaseType(T));
             const type_info = @typeInfo(T);
-            const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
+            const type_tag = @typeInfo(std.builtin.Type).@"union".tag_type.?;
             switch (type_info) {
-                type_tag.Optional => {
-                    const child_type_info = @typeInfo(type_info.Optional.child);
+                type_tag.optional => {
+                    const child_type_info = @typeInfo(type_info.optional.child);
                     switch (child_type_info) {
-                        type_tag.Pointer => {
+                        type_tag.pointer => {
                             self = func(@ptrCast(any));
                         },
                         else => {
@@ -219,7 +219,7 @@ pub const Variant = struct {
                         },
                     }
                 },
-                type_tag.Pointer => {
+                type_tag.pointer => {
                     self = func(any);
                 },
                 else => {
@@ -482,12 +482,12 @@ pub const Variant = struct {
 
     pub inline fn defaultConstruct(comptime T: type) T {
         if (@hasDecl(T, "init")) {
-            const fn_info = @typeInfo(@TypeOf(T.init)).Fn;
+            const fn_info = @typeInfo(@TypeOf(T.init)).@"fn";
             if (fn_info.params.len == 0) {
                 return T.init();
             }
         } else if (@hasDecl(T, "new")) {
-            const fn_info = @typeInfo(@TypeOf(T.new)).Fn;
+            const fn_info = @typeInfo(@TypeOf(T.new)).@"fn";
             if (fn_info.params.len == 0) {
                 return T.new();
             }
@@ -753,12 +753,12 @@ pub const Variant = struct {
 
     pub fn variantAsType(comptime T: type) (fn (*const Variant) T) {
         const type_info = @typeInfo(T);
-        const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
+        const type_tag = @typeInfo(std.builtin.Type).@"union".tag_type.?;
 
         if (type_utils.isTypeGodotObjectClass(T)) {
             const base_type = type_utils.BaseType(T);
             switch (type_info) {
-                type_tag.Optional => {
+                type_tag.optional => {
                     return VariantAsObjectClass(base_type).function;
                 },
                 else => {
@@ -768,13 +768,13 @@ pub const Variant = struct {
         }
 
         switch (type_info) {
-            type_tag.Int => {
+            type_tag.int => {
                 return VariantAsInt(T).function;
             },
-            type_tag.Float => {
+            type_tag.float => {
                 return VariantAsFloat(T).function;
             },
-            type_tag.Enum => {
+            type_tag.@"enum" => {
                 return VariantAsEnum(T).function;
             },
             else => {},
@@ -897,28 +897,28 @@ pub const Variant = struct {
 
     pub fn typeAsVariant(comptime T: type) (fn (*const T) Variant) {
         const type_info = @typeInfo(T);
-        const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
+        const type_tag = @typeInfo(std.builtin.Type).@"union".tag_type.?;
 
         switch (type_info) {
-            type_tag.Struct => {
+            type_tag.@"struct" => {
                 if (@hasDecl(T, "GodotClass")) {
                     return Variant.initObject;
                 }
             },
-            type_tag.Int => {
+            type_tag.int => {
                 return IntAsVariant(T).function;
             },
-            type_tag.Float => {
+            type_tag.float => {
                 return FloatAsVariant(T).function;
             },
-            type_tag.ComptimeInt => {
+            type_tag.comptime_int => {
                 return Variant.initComptimeInt;
             },
-            type_tag.ComptimeFloat => {
+            type_tag.comptime_float => {
                 return Variant.initComptimeFloat;
             },
-            // type_tag.Pointer => {
-            //     if (type_info.Pointer.child == u8) {
+            // type_tag.pointer => {
+            //     if (type_info.pointer.child == u8) {
             //         return cstringAsGodotVariant;
             //     }
             // },
@@ -1041,18 +1041,18 @@ pub const Variant = struct {
 
     pub fn typeToVariantType(comptime T: type) Type {
         const type_info = @typeInfo(T);
-        const type_tag = @typeInfo(std.builtin.Type).Union.tag_type.?;
+        const type_tag = @typeInfo(std.builtin.Type).@"union".tag_type.?;
 
         switch (type_info) {
-            type_tag.Struct => {
+            type_tag.@"struct" => {
                 if (@hasDecl(T, "GodotClass")) {
                     return Type.object;
                 }
             },
-            type_tag.Int => {
+            type_tag.int => {
                 return Type.int;
             },
-            type_tag.Float => {
+            type_tag.float => {
                 return Type.float;
             },
             else => {},
